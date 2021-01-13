@@ -63,7 +63,7 @@ Returns `True` on success, otherwise throws error of libraries-connectors.
 - **table**(`str`, _optional_) — name of table to retrieve values. Can be omitted, if table was specified when created `mysqlite.DB` instance.
 - **args_list**(`list`|`str`, _optional_) — column names from which values will be retrived. Can be `str`, if only 1 column needed, or `list`, if few columns needed. Defaults to **mysqlite.ALL**. Can be ommited if you want to use default value or if you 
 - **where**(`str`|`dict`, _optional_) — condition, that filters values from table. Can be provided as dictionary, where keys are column names and values are conditions, or as a total condition in a single string.
-- **order_by**(`str`, _optional_) — sorting of a result ascending or descending. Can be `'ASC'` or `'DESC'`, which can also be provided as **mysqlite.ASC** and **mysqlite.DESC**.
+- **order_by**(`list`|`str`, _optional_) — sorting of a result ascending or descending. Can be a `list` containing names of columns and ASC/DESC if needed, or `str` with total order rule.
 - **group_by**(`str`, _optional_) — used to group result by specific column.
 - **limit**(`int`, _optional_) — used to limit the amount of records that goes to result.
 

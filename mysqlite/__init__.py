@@ -21,17 +21,28 @@ SQLiteConn = sqlite3.Connection
 
 
 def parse_where(where: Union[str, dict]) -> str:
-        if type(where) is str:
-            return where
-        elif type(where) is dict:
-            clauses = []
-            for key, value in where.items():
-                if type(value) is str:
-                    clauses.append(f'{key} = "{value}"')
-                else:
-                    clauses.append(f'{key} = {value}')
-            return ' AND '.join(clauses)
+    if type(where) is str:
+        return where
+    elif type(where) is dict:
+        clauses = []
+        for key, value in where.items():
+            if type(value) is str:
+                clauses.append(f'{key} = "{value}"')
+            else:
+                clauses.append(f'{key} = {value}')
+        return ' AND '.join(clauses)
 
+def parse_order(order: Union[str, list]) -> str:
+    direction = ASC
+    if type(order) is str:
+        return order
+    elif type(order) is list:
+        if ASC in order:
+            order.remove(ASC)
+        elif DESC in order:
+            order.remove(DESC)
+            direction = DESC
+    return ', '.join(order) + f' {direction}'
 
 class DB:
 
@@ -126,7 +137,7 @@ class DB:
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str]=ALL,
-               where: Union[str, dict]=None, order_by: str=None,
+               where: Union[str, dict]=None, order_by: Union[list, str]=None,
                group_by: str=None, limit: int=None):
 
             statement = 'SELECT {values} FROM {table}'
@@ -134,14 +145,9 @@ class DB:
             if where:
                 statement += f' WHERE {parse_where(where)}'
             if order_by:
-                if order_by in [ASC, DESC]:
-                    statement += f' ORDER BY {order_by}'
-                else:
-                    raise ValueError('order_by can be "ASC" and "DESC" only')
+                statement += f' ORDER BY {parse_order(order_by)}'
             if group_by:
                 statement += f' GROUP BY {group_by}'
-            if sort_by:
-                statement += f' SORT BY {sort_by}'
             if limit:
                 statement += f' LIMIT {limit}'
             statement += ';'
