@@ -20,7 +20,7 @@
 +----+---------+
 ```
 
-> Python 3 file
+> Python 3 file, working with MySQL
 ```python3
 from mysqlite import DB
 from config import DB_NAME, USER, PASSWORD
