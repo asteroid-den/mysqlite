@@ -229,7 +229,7 @@ class ResponseRow:
         self.__setattr__(name, value)
 
     def __str__(self):
-        return json.dump(self._vals, indent=4, ensure_ascii=False)
+        return json.dumps(self._vals, indent=4, ensure_ascii=False)
 
 
 class Response:
