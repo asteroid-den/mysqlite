@@ -263,7 +263,7 @@ class Response:
 
     def __str__(self):
         table = prettytable.PrettyTable()
-        table.set_style(hrules = prettytable.ALL)
+        table.hrules = prettytable.ALL
         if self.rows:
             table.field_names = self.rows[0].cols
             for record in self.rows:
