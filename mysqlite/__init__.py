@@ -191,7 +191,8 @@ class DB:
 
 
 class ResponseRow:
-    def __init__(self, table: str, values: dict):
+    def __init__(self, db: DB, table: str, values: dict):
+        self._db = db
         self._vals = values
         self.table = table
         for key, value in values.items():
@@ -207,10 +208,10 @@ class ResponseRow:
     def values(self):
         return self._vals.values()
 
-    #TODO: make any similar WORKING shortcut
-    # def __call__(self, name, value):
-    #     DB().update(self.table, {name: value}, where = parse_where(self._vals))
-    #     self.__setattr__(name, value)
+
+    def __call__(self, name, value):
+        self._db.update(self.table, {name: value}, where = parse_where(self._vals))
+        self.__setattr__(name, value)
 
 
 class Response:
@@ -233,7 +234,7 @@ class Response:
                 elif db.provider == 'sqlite3':
                     setattr(self, row.cid, None)
         for row in rows:
-            self.rows.append(ResponseRow(table, row))
+            self.rows.append(ResponseRow(db, table, row))
 
     def __iter__(self):
         for row in self.rows:
