@@ -106,8 +106,8 @@ class DB:
     @push('commit')
     def insert(self, table: str=None, dic: dict=None, **kwargs):
         statement = 'INSERT INTO {table} ({keys}) VALUES ({values});'
-        table = self.table if not table
-        dic = kwargs if not dic
+        table = table or self.table
+        dic = dic or kwargs
         vals = []
         for value in dic.values():
             if type(value) is str:
@@ -130,7 +130,7 @@ class DB:
                sort_by: str=None, limit: int=None, *args):
 
             statement = 'SELECT {values} FROM {table}'
-            table = self.table if not table
+            table = table or self.table
             if where:
                 statement += f' WHERE {parse_where(where)}'
             if order_by:
@@ -145,7 +145,7 @@ class DB:
             if limit:
                 statement += f' LIMIT {limit}'
             statement += ';'
-            args_list = args if not args_list
+            args_list = args_list or args
             if type(args_list) is not list:
                 args_list = [args_list]
             statement = statement.format(
@@ -159,8 +159,8 @@ class DB:
                where: Union[str, dict]=None, **kwargs):
 
             statement = 'UPDATE {table} SET {pairs}'
-            table = self.table if not table
-            dic = kwargs if not dic
+            table = table or self.table
+            dic = dic or kwargs
             if where:
                 statement += f' WHERE {parse_where(where)}'
             statement += ';'
@@ -180,7 +180,7 @@ class DB:
 
     @push('commit')
     def delete(self, table: str, where: Union[str, dict]=None):
-        table = self.table if not table
+        table = table or self.table
         statement = f'DELETE FROM {table}'
         if where:
             statement += f' WHERE {parse_where(where)}'
