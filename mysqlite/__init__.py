@@ -32,38 +32,37 @@ def parse_where(where: Union[str, dict]) -> str:
 
 class DB:
 
-
-    def __init__(self, db_name: str = None, user: str = 'root', passwd: str = None,
-                filename: str = None, table: str = None):
-
-        # Only db_name + user (optional, default 'root') + passwd OR filename must be provided
-        if db_name and passwd:
-            self.provider = 'mysql'
-            self.db_name = db_name
-            self.user = user
-            self.passwd = passwd
-            charset = 'utf8mb4'
-            host = 'localhost'
-        elif filename:
-            if re.match(r'^[\w,\s-]+\.db$', filename):
-                self.provider = 'sqlite3'
-                self.filename = filename
+    def __init__(
+                self, db_name: str=None, user: str='root', passwd: str=None,
+                filename: str=None, table: str=None):
+            # Only db_name + user (optional, default 'root') + passwd OR filename must be provided
+            if db_name and passwd:
+                self.provider = 'mysql'
+                self.db_name = db_name
+                self.user = user
+                self.passwd = passwd
+                charset = 'utf8mb4'
+                host = 'localhost'
+            elif filename:
+                if re.match(r'^[\w,\s-]+\.db$', filename):
+                    self.provider = 'sqlite3'
+                    self.filename = filename
+                else:
+                    raise ValueError('Invalid filename provided')
             else:
-                raise ValueError('Invalid filename provided')
-        else:
-            raise ValueError('Neither data for MySQL nor for SQLite provided')
+                raise ValueError('Neither data for MySQL nor for SQLite provided')
 
-        self.table = table
+            self.table = table
 
     def _create_conn(self) -> Union[MySQLConn, SQLiteConn]:
         if self.provider == 'mysql':
             conn = pymysql.connect(
-                host = self.host,
-                user = self.user,
-                password = self.passwd,
-                db = self.db_name,
-                charset = self.charset,
-                cursorclass = DictCursor
+                host=self.host,
+                user=self.user,
+                password=self.passwd,
+                db=self.db_name,
+                charset=self.charset,
+                cursorclass=DictCursor
             )
         elif self.provider == 'sqlite3':
             conn = sqlite3.connect(self.filename)
@@ -85,12 +84,13 @@ class DB:
                     result = True
                 elif push_type == 'fetch':
                     result = cursor.fetchall()
-                    table = re.search(r'FROM (?P<table>\w+)', query).group('table')
+                    table = re.search(r'FROM (?P<table>\w+)',
+                                      query).group('table')
                     if self.provider == 'sqlite3':
                         if kwargs.get('tup_res', False):
                             return result
                         cols = tuple(el[0] for el in self.raw_select(
-                            GET_COLUMNS_SQLITE % table, tup_res = True))
+                            GET_COLUMNS_SQLITE % table, tup_res=True))
                         result = list(dict(zip(cols, row)) for row in result)
                     result = Response(self, table, result)
                 else:
@@ -100,72 +100,73 @@ class DB:
             return args_wrapper
         return wrapper
 
-
     @push('commit')
-    def insert(self, table: Optional[str] = None, dic: Optional[dict] = None, **kwargs):
+    def insert(self, table: str=None, dic: dict=None, **kwargs):
         statement = 'INSERT INTO {table} ({keys}) VALUES ({values});'
-        if not table: table = self.table
-        if not dic: dic = kwargs
+        table = self.table if not table
+        dic = kwargs if not dic
         vals = []
         for value in dic.values():
             if type(value) is str:
                 value = value.replace('"', '\\"')
                 vals.append(f'"{value}"')
-            elif value == None:
+            elif value is None:
                 vals.append('NULL')
             else:
                 vals.append(str(value))
         statement = statement.format(
-            keys = ', '.join(dic.keys()),
-            values = ', '.join(vals),
-            table = table)
+            keys=', '.join(dic.keys()),
+            values=', '.join(vals),
+            table=table)
 
         return statement
 
     @push('fetch')
-    def select(self, table: Optional[str] = None, args_list: Optional[Union[list, str]] = ALL,
-        where: Optional[Union[str, dict]] = None, *args):
+    def select(
+            self, table: str=None, args_list: Union[list, str]=ALL,
+            where: Union[str, dict]=None, *args):
 
-        statement = 'SELECT {values} FROM {table}'
-        if not table: table = self.table
-        if where:
-            statement += f' WHERE {parse_where(where)}'
-        statement += ';'
-        if not args_list: args_list = args
-        if type(args_list) is not list: args_list = [args_list]
-        statement = statement.format(
-            values = ', '.join(args_list),
-            table = table)
+            statement = 'SELECT {values} FROM {table}'
+            table = self.table if not table
+            if where:
+                statement += f' WHERE {parse_where(where)}'
+            statement += ';'
+            args_list = args if not args_list
+            if type(args_list) is not list:
+                args_list = [args_list]
+            statement = statement.format(
+                values=', '.join(args_list),
+                table=table)
 
-        return statement
-
-    @push('commit')
-    def update(self, table: Optional[str] = None, dic: Optional[dict] = None,
-        where: Optional[Union[str, dict]] = None, **kwargs):
-
-        statement = 'UPDATE {table} SET {pairs}'
-        if not table: table = self.table
-        if not dic: dic = kwargs
-        if where:
-            statement += f' WHERE {parse_where(where)}'
-        statement += ';'
-        vals = []
-        for key, value in dic.items():
-            if type(value) is str:
-                vals.append(f'{key} = "{value}"')
-            elif value == None:
-                vals.append(f'{key} = NULL')
-            else:
-                vals.append(f'{key} = {value}')
-        statement = statement.format(
-            pairs = ', '.join(vals),
-            table = table)
-
-        return statement
+            return statement
 
     @push('commit')
-    def delete(self, table: str, where: Optional[Union[str, dict]] = None):
-        if not table: table = self.table
+    def update(self, table: str=None, dic: dict=None,
+               where: Union[str, dict]=None, **kwargs):
+
+            statement = 'UPDATE {table} SET {pairs}'
+            table = self.table if not table
+            dic = kwargs if not dic
+            if where:
+                statement += f' WHERE {parse_where(where)}'
+            statement += ';'
+            vals = []
+            for key, value in dic.items():
+                if type(value) is str:
+                    vals.append(f'{key} = "{value}"')
+                elif value is None:
+                    vals.append(f'{key} = NULL')
+                else:
+                    vals.append(f'{key} = {value}')
+            statement = statement.format(
+                pairs=', '.join(vals),
+                table=table)
+
+            return statement
+
+    @push('commit')
+    def delete(self, table: str, where: Union[str, dict]=None):
+        table = self.table if not table
         statement = f'DELETE FROM {table}'
         if where:
             statement += f' WHERE {parse_where(where)}'
@@ -175,11 +176,11 @@ class DB:
     @push('commit')
     def create_table(self, name: str, fields: Union[Dict[str, str], str]):
         if type(fields) is dict:
-            t_fields = '(' + ', '.join([f'{key} {value}' for key, value in fields.items()]) + ')'
+            t_fields = '(' + ', '.join(
+                [f'{key} {value}' for key, value in fields.items()]) + ')'
         elif type(fields) is str:
             t_fields = f'({fields})'
         return f'CREATE TABLE {name} {t_fields};'
-
 
     @push('fetch')
     def raw_select(self, query: str, tup_res: bool = False):
@@ -208,9 +209,9 @@ class ResponseRow:
     def values(self):
         return self._vals.values()
 
-
     def __call__(self, name, value):
-        self._db.update(self.table, {name: value}, where = parse_where(self._vals))
+        self._db.update(self.table, {name: value},
+                        where=parse_where(self._vals))
         self.__setattr__(name, value)
 
 
@@ -260,7 +261,5 @@ class Response:
 
     def __bool__(self):
         return bool(len(self.rows))
-
-
 
 __all__ = ['ALL', 'parse_where', 'DB']
