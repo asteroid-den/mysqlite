@@ -45,7 +45,7 @@ Main class to interact with DBs. Only `db_name` + `passwd` + `user` (user is opt
 **Parameters**
 - **name**(`str`) — a name of new table
 - **fields**(`dict`|`str`) — description of columns. Must be provided as dictionary, where keys are column names and values are characteristics of this column, or as a total description of all columns in a single string **without opening and closing parantheses**.  
-#### `insert(table, dic, **kwargs*)`
+#### `insert(table, dic, **kwargs)`
 **Parameters**:
 - **table**(`str`, _optional_) — name of table to insert values. Can be omitted, if table was specified when created `mysqlite.DB` instance.
 - **dic**(`dict`, _optional_) — dictionary with values to insert, where keys are column names, and values are values to insert.
