@@ -66,6 +66,7 @@ Returns `True` on success, otherwise throws error of libraries-connectors.
 - **order_by**(`str`, _optional_) — sorting of a result ascending or descending. Can be `'ASC'` or `'DESC'`, which can also be provided as **mysqlite.ASC** and **mysqlite.DESC**.
 - **group_by**(`str`, _optional_) — used to group result by specific column.
 - **limit**(`int`, _optional_) — used to limit the amount of records that goes to result.
+
 Returns **mysqlite.Response** object containing result of query.  
 #### `update(table, dic, where, **kwargs)`
 **Parameters**
