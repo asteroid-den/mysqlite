@@ -1,2 +1,4 @@
-# mysqlite
-Minimalistic MySQL and SQLite3 ORM
+## MySQLite
+
+**Minimalistic MySQL and SQLite 3 ORM**  
+_Docs coming soon..._
