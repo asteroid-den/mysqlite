@@ -8,10 +8,13 @@ import sqlite3
 import itertools
 
 ALL = '*'
+ASC = 'ASC'
+DESC = 'DESC'
 
 GET_TABLES_SQLITE = 'SELECT name FROM sqlite_master WHERE type = "table";'
 GET_COLUMNS_MYSQL = 'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = "%s" AND TABLE_NAME = "%s";'
 GET_COLUMNS_SQLITE = 'SELECT name FROM PRAGMA_TABLE_INFO("%s");'
+
 
 MySQLConn = pymysql.connections.Connection
 SQLiteConn = sqlite3.Connection
@@ -122,14 +125,25 @@ class DB:
         return statement
 
     @push('fetch')
-    def select(
-            self, table: str=None, args_list: Union[list, str]=ALL,
-            where: Union[str, dict]=None, *args):
+    def select(self, table: str=None, args_list: Union[list, str]=ALL,
+            where: Union[str, dict]=None, order_by: str=None,
+            sort_by: str=None, limit: int=None, *args):
 
             statement = 'SELECT {values} FROM {table}'
             table = self.table if not table
             if where:
                 statement += f' WHERE {parse_where(where)}'
+            if order_by:
+                if order_by in [ASC, DESC]:
+                    statement += f' ORDER BY {order_by}'
+                else:
+                    raise ValueError('order_by can be "ASC" and "DESC" only')
+            if group_by:
+                statement += f' GROUP BY {group_by}'
+            if sort_by:
+                statement += f' SORT BY {sort_by}'
+            if limit:
+                statement += f' LIMIT {limit}'
             statement += ';'
             args_list = args if not args_list
             if type(args_list) is not list:
@@ -262,4 +276,4 @@ class Response:
     def __bool__(self):
         return bool(len(self.rows))
 
-__all__ = ['ALL', 'parse_where', 'DB']
+__all__ = ['ALL', 'ASC', 'DESC', 'parse_where', 'DB']
