@@ -3,7 +3,7 @@
 **Minimalistic MySQL and SQLite 3 ORM**  
 
 ### Examples
-```python3
+```pycon
 >>> from mysqlite import *
 >>> db = DB(filename = 'test.db')
 >>> db.create_table('users', {'id': 'INT NOT NULL', 'balance': 'FLOAT NOT NULL DEFAULT 50'})
