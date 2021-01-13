@@ -2,16 +2,17 @@
 
 **Minimalistic MySQL and SQLite 3 ORM**  
 
-### Examples
+### Quickstart
 
-> Python console, working with SQLite 3
-```pycon
->>> from mysqlite import *
->>> db = DB(filename = 'test.db')
->>> db.create_table('users', {'id': 'INT NOT NULL', 'balance': 'FLOAT NOT NULL DEFAULT 50'})
->>> db.insert('users', {'id': 1})
->>> db.insert('users', {'id': 2, 'balance': 100})
->>> print(db.select('users'))
+> SQLite 3
+```python3
+from mysqlite import *
+db = DB(filename = 'test.db')
+db.create_table('users', {'id': 'INT NOT NULL', 'balance': 'FLOAT NOT NULL DEFAULT 50'})
+db.insert('users', {'id': 1})
+db.insert('users', {'id': 2, 'balance': 100})
+print(db.select('users'))
+
 +----+---------+
 | id | balance |
 +----+---------+
@@ -20,7 +21,7 @@
 +----+---------+
 ```
 
-> Python 3 file, working with MySQL
+> MySQL
 ```python3
 from mysqlite import DB
 from config import DB_NAME, USER, PASSWORD
