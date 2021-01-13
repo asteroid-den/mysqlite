@@ -39,7 +39,7 @@ for pet in result:
 ```  
 ###Docs
 
-##### class mysqlite.DB(db_name=None, user='root', passwd=None, filename=None, table=None)
+##### class mysqlite.DB(*db_name=None, user='root', passwd=None, filename=None, table=None*)
 Main class to interact with DBs. Only `db_name` + `passwd` + `user` (user is optional) for connecting to MySQL DB **or** `filename` for connectiong to SQLite3 DB must be provided. You can specify a `table` if you want not to specify it in every request.
 > create_table(*name, fields*)
 - **name**(`str`) — a name of new table
