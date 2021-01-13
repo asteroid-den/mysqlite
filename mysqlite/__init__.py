@@ -1,7 +1,7 @@
 import pymysql
 from pymysql.cursors import DictCursor
 from typing import Optional, Union, List, Dict
-from prettytable import PrettyTable
+import prettytable
 import re
 import json
 import sqlite3
@@ -262,7 +262,8 @@ class Response:
         return next(self.__iter__())
 
     def __str__(self):
-        table = PrettyTable()
+        table = prettytable.PrettyTable()
+        table.set_style(hrules = prettytable.ALL)
         if self.rows:
             table.field_names = self.rows[0].cols
             for record in self.rows:
