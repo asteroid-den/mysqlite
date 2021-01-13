@@ -126,8 +126,8 @@ class DB:
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str]=ALL,
-            where: Union[str, dict]=None, order_by: str=None,
-            sort_by: str=None, limit: int=None, *args):
+               where: Union[str, dict]=None, order_by: str=None,
+               sort_by: str=None, limit: int=None, *args):
 
             statement = 'SELECT {values} FROM {table}'
             table = self.table if not table
@@ -227,6 +227,9 @@ class ResponseRow:
         self._db.update(self.table, {name: value},
                         where=parse_where(self._vals))
         self.__setattr__(name, value)
+
+    def __str__(self):
+        return json.dump(self._vals, indent=4, ensure_ascii=False)
 
 
 class Response:
