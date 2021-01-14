@@ -13,7 +13,7 @@ setuptools.setup(
     long_description_content_type = "text/markdown",
     url = "https://bitbucket.org/asteroid_den/mysqlite/",
     packages = ['mysqlite'],
-    license = 'MIT'
+    license = 'MIT',
     classifiers = [
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
