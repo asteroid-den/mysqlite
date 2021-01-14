@@ -110,11 +110,11 @@ Returns `True` on success, otherwise throws error of libraries-connections.
 
 ***
 
-#### class mysqlite.ResponseRow(db, table, value)
+#### `class mysqlite.ResponseRow(db, table, value)`
 Class, containing values of single record. Does not have standart methods.  
-#### Property mysqlite.ResponseRow.cols
+#### Property `mysqlite.ResponseRow.cols`
 Returns list of column names that was requested in `mysqlite.DB.select()` or `mysqlite.DB.raw_select()`.  
-#### Property mysqlite.ResponseRow.values
+#### Property `mysqlite.ResponseRow.values`
 Returns list of values this row containing.  
 
 Objects of this class have shortcut for `mysqlite.DB.update()`. So,
@@ -131,6 +131,6 @@ res(balance = res.balance + 50)
 
 ***
 
-#### class mysqlite.Response(db, table, rows)
+#### `class mysqlite.Response(db, table, rows)`
 Class, containing whole response of database on `SELECT` query.
 Does not have methods, but have specific behaviour because of overloaded magic methods.
