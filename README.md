@@ -95,7 +95,7 @@ Returns `True` on success, otherwise throws error of libraries-connectors.
 
 Returns `True` on success, otherwise throws error of libraries-connectors.  
 #### `raw_select(query, tup_res)`
-This method can be used if `select()` does not provide enough functionality.
+This method can be used if `select()` does not provide enough functionality.  
 **Parameters**:
 - **query**(`str`) — string containing completed SQL query.
 - **tup_res**(`bool`) — inner parameter. Defaults to `False`. If using SQLite 3, can be set to `True` to get response as tuple instead of **mysqlite.Response**.
