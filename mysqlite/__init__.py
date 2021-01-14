@@ -254,6 +254,9 @@ class ResponseRow:
     def __str__(self):
         return json.dumps(self._vals, indent=4, ensure_ascii=False)
 
+    def __repr__(self):
+        return str(self)
+
 
 class Response:
     def __init__(self, db: DB, table: Optional[str],
