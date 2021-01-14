@@ -112,6 +112,36 @@ Returns `True` on success, otherwise throws error of libraries-connections.
 
 ***
 
+#### `class mysqlite.Response(db, table, rows)`
+Class, containing whole response of database on `SELECT` query.
+Does not have standart methods, but have specific behaviour because of overloaded magic methods.
+- You can iterate through `mysqlite.Response` objects
+```python3
+res = db.select('users')
+for user in res:
+    print(user.id)
+```
+Output:
+```pycon
+1
+2
+3
+4
+5
+```
+- If response contains only one record, `mysqlite.Response` object will have attributes with values of this record just as `mysqlite.ResponseRow` does.  
+- If response is empty, `mysqlite.Response` object will also have that attributes, but they all would contain `None` objects.  
+- Thanks to [`prettytable`](https://pypi.org/project/prettytable/) module, string representation of `mysqlite.Response` objects looks like ASCII tables.  
+- You can get `mysqlite.ResponseRow` by index just like you do it with lists.
+- You can get all values of a single column by specifying column name in square brackets
+```python3
+res = db.select('users')
+print(res['id']) # output: [1, 2, 3, 4, 5]
+```
+- `mysqlite.Response` objects can be used in conditionals. It equals to `True` if there are any records, otherwise it equals to `False`.
+
+***
+
 #### `class mysqlite.ResponseRow(db, table, value)`
 Class, containing values of single record. Does not have standart methods.  
 #### Property `mysqlite.ResponseRow.cols`
@@ -141,33 +171,3 @@ res(balance = res.balance + 50)
 ```
 
 `mysqlite.ResponseRow` objects contained inside of `mysqlite.Response` object.
-
-***
-
-#### `class mysqlite.Response(db, table, rows)`
-Class, containing whole response of database on `SELECT` query.
-Does not have standart methods, but have specific behaviour because of overloaded magic methods.
-- You can iterate through `mysqlite.Response` objects
-```python3
-res = db.select('users')
-for user in res:
-    print(user.id)
-```
-Output:
-```pycon
-1
-2
-3
-4
-5
-```
-- If response contains only one record, `mysqlite.Response` object will have attributes with values of this record just as `mysqlite.ResponseRow` does.  
-- If response is empty, `mysqlite.Response` object will also have that attributes, but they all would contain `None` objects.  
-- Thanks to [`prettytable`](https://pypi.org/project/prettytable/) module, string representation of `mysqlite.Response` objects looks like ASCII tables.  
-- You can get `mysqlite.ResponseRow` by index just like you do it with lists.
-- You can get all values of a single column by specifying column name in square brackets
-```python3
-res = db.select('users')
-print(res['id']) # output: [1, 2, 3, 4, 5]
-```
-- `mysqlite.Response` objects can be used in conditionals. It equals to `True` if there are any records, otherwise it equals to `False`.
