@@ -108,7 +108,7 @@ This method can be used if `create_table()`, `insert()`, `update()` and `delete(
 **Parameters**:
 - **query**(`str`) — string containing completed SQL query.
 
-Returns `True` on success, otherwise throws error of libraries-connections.
+Returns `True` on success, otherwise throws error of libraries-connectors.
 
 ***
 
