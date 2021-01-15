@@ -167,14 +167,14 @@ class DB:
                 statement += f' GROUP BY {group_by}'
             if limit:
                 statement += f' LIMIT {limit}'
-            statement += ';' 
+            statement += ';'
             args_list = args_list or args
 
             if type(args_list) is dict:
                 statement = statement.format(
                     values=', '.join([f'{column} AS {column_key}' for column, column_key in args_list.items()]),
                     table=table)
-            elif type(args_list) is str:
+            elif type(args_list) is not list:
                 args_list = [args_list]
             statement = statement.format(
                 values=', '.join(args_list),
