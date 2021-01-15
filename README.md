@@ -1,6 +1,8 @@
-# MySQLite
+![image](https://user-images.githubusercontent.com/49994705/104775870-c0aea200-5781-11eb-8051-3c0129e34a93.png)
 
 Minimalistic MySQL and SQLite 3 ORM  
+
+_I'll be glad to see you in our_ [Telegram chat](https://t.me/MySQLite) ^_^
 
 ## Quickstart
 
@@ -39,8 +41,16 @@ for pet in result:
 ```  
 ## Docs
 
-#### `class mysqlite.DB(db_name=None, user='root', passwd=None, filename=None, table=None)`
-Main class to interact with DBs. Only `db_name` + `passwd` + `user` (user is optional) for connecting to MySQL DB **or** `filename` for connectiong to SQLite3 DB must be provided. You can specify a `table` if you want not to specify it in every request.  
+#### `class mysqlite.DB(db_name=None, user=None, passwd=None, filename=None, table=None)`
+Main class to interact with DBs. Only `db_name` + `passwd` + `user` (`user` is optional) for connecting to MySQL DB **or** `filename` for connectiong to SQLite3 DB must be provided. You can specify a `table` if you want not to specify it in every request.  
+If you need to initialize several `mysqlite.DB` objects that would work with same DB you can set `mysqlite.DB_NAME`, `mysqlite.USER`, `mysqlite.PASSWD` and `mysqlite.FILENAME` values to needed. `mysqlite.USER` defaults to `'root'`, other values are empty.  
+Example
+```python3
+import mysqlite
+mysqlite.DB_NAME = 'test'
+mysqlite.PASSWD = '123'
+db = mysqlite.DB() # would interract with MySQL DB named 'test' via user 'root'
+```
 #### Property `mysqlite.DB.exists`
 Shows whether DB exists or not. Checks current working directory for SQLite DB and list of all DBs that user has access to for MySQL. Returns `True` or `False`.  
 #### `create_table(name, fields)`
@@ -66,7 +76,7 @@ Returns `True` on success, otherwise throws error of libraries-connectors.
 #### `select(table, args_list, where, order_by, group_by, limit)`
 **Parameters**:
 - **table**(`str`, _optional_) — name of table to retrieve values. Can be omitted, if table was specified when created `mysqlite.DB` instance.
-- **args_list**(`list`|`str`, _optional_) — column names from which values will be retrived. Can be `str`, if only 1 column needed, or `list`, if few columns needed. Defaults to **mysqlite.ALL**. Can be ommited if you want to use default value or if you 
+- **args_list**(`list`|`str`|`dict`, _optional_) — column names from which values will be retrived. Can be `str`, if only 1 column needed, or `list`, if few columns needed, or `dict`, if needed columns must be renamed in response using SQL query `AS` operator. In case of providing values as `dict` keys must be original names of columns (or just a statement part, like `'COUNT(*)'`, if SQL functions needed), and values must be aliases to them. Defaults to **mysqlite.ALL**. Can be ommited if you want to use default value.
 - **where**(`str`|`dict`, _optional_) — condition, that filters values from table. Can be provided as dictionary, where keys are column names and values are conditions, or as a total condition in a single string.
 - **order_by**(`list`|`str`, _optional_) — sorting of a result ascending or descending. Can be a `list` containing names of columns and ASC/DESC if needed, or `str` with total order rule.
 - **group_by**(`str`, _optional_) — used to group result by specific column.

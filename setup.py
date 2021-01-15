@@ -1,11 +1,12 @@
 import setuptools
+from mysqlite import __version__
 
 with open("README.md", "r", encoding = "utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name = "mysqlite",
-    version = "0.0.1",
+    version = __version__,
     author = "asteroid_den",
     author_email = "denbartolomee@gmail.com",
     description = "Minimalistic MySQL and SQLite 3 ORM",

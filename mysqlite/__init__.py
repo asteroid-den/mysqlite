@@ -12,6 +12,11 @@ ALL = '*'
 ASC = 'ASC'
 DESC = 'DESC'
 
+DB_NAME = ''
+USER = 'root'
+PASSWD = ''
+FILENAME = ''
+
 GET_TABLES_SQLITE = 'SELECT name FROM sqlite_master WHERE type = "table";'
 GET_COLUMNS_MYSQL = 'SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = "%s" AND TABLE_NAME = "%s";'
 GET_COLUMNS_SQLITE = 'SELECT name FROM PRAGMA_TABLE_INFO("%s");'
@@ -33,6 +38,7 @@ def parse_where(where: Union[str, dict]) -> str:
                 clauses.append(f'{key} = {value}')
         return ' AND '.join(clauses)
 
+
 def parse_order(order: Union[str, list]) -> str:
     direction = ASC
     if type(order) is str:
@@ -45,23 +51,27 @@ def parse_order(order: Union[str, list]) -> str:
             direction = DESC
     return ', '.join(order) + f' {direction}'
 
+
 class DB:
 
     def __init__(
-                self, db_name: str=None, user: str='root', passwd: str=None,
+                self, db_name: str=None, user: str=None, passwd: str=None,
                 filename: str=None, table: str=None):
             # Only db_name + user (optional, default 'root') + passwd OR filename must be provided
             if db_name and passwd:
                 self.provider = 'mysql'
-                self.db_name = db_name
-                self.user = user
-                self.passwd = passwd
+                self.db_name = db_name or DB_NAME
+                self.user = user or USER
+                self.passwd = passwd or PASSWD
                 self.charset = 'utf8mb4'
                 self.host = 'localhost'
-            elif filename:
+            elif filename or FILENAME:
                 if re.match(r'^[\w,\s-]+\.db$', filename):
                     self.provider = 'sqlite3'
                     self.filename = filename
+                elif re.match(r'^[\w,\s-]+\.db$', FILENAME):
+                    self.provider = 'sqlite3'
+                    self.filename = FILENAME
                 else:
                     raise ValueError('Invalid filename provided')
             else:
@@ -94,7 +104,6 @@ class DB:
                 return True
             except pymysql.err.OperationalError:
                 return False
-
 
     def push(push_type: str):
         def wrapper(func):
@@ -153,7 +162,7 @@ class DB:
         return statement
 
     @push('fetch')
-    def select(self, table: str=None, args_list: Union[list, str]=ALL,
+    def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
                where: Union[str, dict]=None, order_by: Union[list, str]=None,
                group_by: str=None, limit: int=None):
 
@@ -168,12 +177,18 @@ class DB:
             if limit:
                 statement += f' LIMIT {limit}'
             statement += ';'
-            args_list = args_list or args
-            if type(args_list) is not list:
-                args_list = [args_list]
-            statement = statement.format(
-                values=', '.join(args_list),
-                table=table)
+            if type(args_list) is dict:
+                statement = statement.format(
+                    values=', '.join([f'{column} AS {column_key}'
+                                     for column, column_key in
+                                     args_list.items()]),
+                    table=table)
+            else:
+                args_list = args_list if type(
+                    args_list) is list else [args_list]
+                statement = statement.format(
+                    values=', '.join(args_list),
+                    table=table)
 
             return statement
 
@@ -308,3 +323,5 @@ class Response:
         return bool(len(self.rows))
 
 __all__ = ['ALL', 'ASC', 'DESC', 'parse_where', 'DB']
+
+__version__ = '0.0.2'
