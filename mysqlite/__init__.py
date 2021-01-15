@@ -153,7 +153,7 @@ class DB:
         return statement
 
     @push('fetch')
-    def select(self, table: str=None, args_list: Union[list, str]=ALL,
+    def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
                where: Union[str, dict]=None, order_by: Union[list, str]=None,
                group_by: str=None, limit: int=None):
 
@@ -167,9 +167,14 @@ class DB:
                 statement += f' GROUP BY {group_by}'
             if limit:
                 statement += f' LIMIT {limit}'
-            statement += ';'
+            statement += ';' 
             args_list = args_list or args
-            if type(args_list) is not list:
+
+            if type(args_list) is dict:
+                statement = statement.format(
+                    values=', '.join([f'{column} AS {column_key}' for column, column_key in args_list.items()]),
+                    table=table)
+            elif type(args_list) is str:
                 args_list = [args_list]
             statement = statement.format(
                 values=', '.join(args_list),
