@@ -129,8 +129,15 @@ class DB:
                     if self.provider == 'sqlite3':
                         if kwargs.get('tup_res', False):
                             return result
-                        cols = tuple(el[0] for el in self.raw_select(
-                            GET_COLUMNS_SQLITE % table, tup_res=True))
+                        a_l = kwargs.get('args_list') or (
+                            args[1] if len(args) >= 2 else None) or ALL
+                        if a_l == ALL:
+                            cols = tuple(el[0] for el in self.raw_select(
+                                GET_COLUMNS_SQLITE % table, tup_res=True))
+                        else:
+                            cols = [a_l] if type(a_l) is str else (
+                                a_l if type(a_l) is list else
+                                list(a_l.values()))
                         result = list(dict(zip(cols, row)) for row in result)
                     result = Response(self, table, result)
                 else:
