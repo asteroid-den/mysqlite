@@ -314,7 +314,7 @@ class Response:
         return table.get_string()
 
     def __getitem__(self, key: Union[str, int]):
-        if key.isdigit():
+        if type(key) is int:
             return self.rows[key]
         else:
             return [getattr(i, key) for i in self.rows]
