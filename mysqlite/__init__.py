@@ -26,13 +26,14 @@ MySQLConn = pymysql.connections.Connection
 SQLiteConn = sqlite3.Connection
 
 
-def parse_where(where: Union[str, dict]) -> str:
+def parse_where(where: Union[str, dict], provider: str) -> str:
     if type(where) is str:
         return where
     elif type(where) is dict:
         clauses = []
         for key in where.keys():
-            clauses.append(f'{key} = %s')
+            clauses.append(f'{key} = %s' if provider == 'mysql' else
+                           f'{key} = ?')
         return ' AND '.join(clauses)
 
 
@@ -154,10 +155,11 @@ class DB:
             if value is None:
                 vals.append('NULL')
             else:
-                vals.append(str(value))
+                vals.append(value)
         statement = statement.format(
             keys=', '.join(dic.keys()),
-            values=', '.join(['?']*len(vals)),
+            values=', '.join((['%s'] if self.provider == 'mysql' else ['?']) *
+                             len(vals)),
             table=table)
         return statement, vals
 
@@ -169,7 +171,7 @@ class DB:
             statement = 'SELECT {values} FROM {table}'
             table = table or self.table
             if where:
-                statement += f' WHERE {parse_where(where)}'
+                statement += f' WHERE {parse_where(where, self.provider)}'
             if order_by:
                 statement += f' ORDER BY {parse_order(order_by)}'
             if group_by:
@@ -201,7 +203,7 @@ class DB:
             table = table or self.table
             dic = dic or kwargs
             if where:
-                statement += f' WHERE {parse_where(where)}'
+                statement += f' WHERE {parse_where(where, self.provider)}'
             statement += ';'
             keys = []
             vals = []
@@ -223,7 +225,7 @@ class DB:
         table = table or self.table
         statement = f'DELETE FROM {table}'
         if where:
-            statement += f' WHERE {parse_where(where)}'
+            statement += f' WHERE {parse_where(where, self.provider)}'
         statement += ';'
         where_vals = tuple(where.values()) if type(where) is dict else tuple()
         return statement, where_vals
