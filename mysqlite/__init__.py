@@ -31,11 +31,8 @@ def parse_where(where: Union[str, dict]) -> str:
         return where
     elif type(where) is dict:
         clauses = []
-        for key, value in where.items():
-            if type(value) is str:
-                clauses.append(f'{key} = "{value}"')
-            else:
-                clauses.append(f'{key} = {value}')
+        for key in where.keys():
+            clauses.append(f'{key} = %s')
         return ' AND '.join(clauses)
 
 
@@ -108,7 +105,7 @@ class DB:
     def push(push_type: str):
         def wrapper(func):
             def args_wrapper(self, *args, **kwargs):
-                query = func(self, *args, **kwargs)
+                query, params = func(self, *args, **kwargs)
                 conn = self._create_conn()
                 if self.provider == 'mysql':
                     with conn.cursor() as cursor:
@@ -154,10 +151,7 @@ class DB:
         dic = dic or kwargs
         vals = []
         for value in dic.values():
-            if type(value) is str:
-                value = value.replace('"', '\\"')
-                vals.append(f'"{value}"')
-            elif value is None:
+            if value is None:
                 vals.append('NULL')
             else:
                 vals.append(str(value))
@@ -165,8 +159,8 @@ class DB:
             keys=', '.join(dic.keys()),
             values=', '.join(vals),
             table=table)
-
-        return statement
+        where_vals = tuple(where.values()) if type(where) is dict else tuple()
+        return statement, where_vals + vals
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
@@ -196,8 +190,9 @@ class DB:
                 statement = statement.format(
                     values=', '.join(args_list),
                     table=table)
-
-            return statement
+            where_vals = tuple(
+                where.values()) if type(where) is dict else tuple()
+            return statement, where_vals
 
     @push('commit')
     def update(self, table: str=None, dic: dict=None,
@@ -209,19 +204,20 @@ class DB:
             if where:
                 statement += f' WHERE {parse_where(where)}'
             statement += ';'
+            keys = []
             vals = []
             for key, value in dic.items():
-                if type(value) is str:
-                    vals.append(f'{key} = "{value}"')
-                elif value is None:
-                    vals.append(f'{key} = NULL')
+                if value is None:
+                    keys.append(f'{key} = NULL')
                 else:
-                    vals.append(f'{key} = {value}')
+                    keys.append(f'{key} = %s')
+                vals.append(str(value))
             statement = statement.format(
-                pairs=', '.join(vals),
+                pairs=', '.join(keys),
                 table=table)
-
-            return statement
+            where_vals = tuple(
+                where.values()) if type(where) is dict else tuple()
+            return statement, where_vals + vals
 
     @push('commit')
     def delete(self, table: str, where: Union[str, dict]=None):
@@ -230,7 +226,8 @@ class DB:
         if where:
             statement += f' WHERE {parse_where(where)}'
         statement += ';'
-        return statement
+        where_vals = tuple(where.values()) if type(where) is dict else tuple()
+        return statement, where_vals
 
     @push('commit')
     def create_table(self, name: str, fields: Union[Dict[str, str], str]):
@@ -239,15 +236,15 @@ class DB:
                 [f'{key} {value}' for key, value in fields.items()]) + ')'
         elif type(fields) is str:
             t_fields = f'({fields})'
-        return f'CREATE TABLE {name} {t_fields};'
+        return f'CREATE TABLE {name} {t_fields};', tuple()
 
     @push('fetch')
-    def raw_select(self, query: str, tup_res: bool = False):
-        return query
+    def raw_select(self, query: str, tup_res: bool=False, params: tuple=()):
+        return query, params
 
     @push('commit')
-    def raw_commit(self, query: str):
-        return query
+    def raw_commit(self, query: str, params: tuple=()):
+        return query, params
 
 
 class ResponseRow:
@@ -329,6 +326,6 @@ class Response:
     def __bool__(self):
         return bool(len(self.rows))
 
-__all__ = ['ALL', 'ASC', 'DESC', 'parse_where', 'DB']
+__all__ = ['ALL', 'ASC', 'DESC', 'parse_where', 'parse_order', 'DB']
 
-__version__ = '0.0.2'
+__version__ = '0.0.3'
