@@ -159,8 +159,7 @@ class DB:
             keys=', '.join(dic.keys()),
             values=', '.join(vals),
             table=table)
-        where_vals = tuple(where.values()) if type(where) is dict else tuple()
-        return statement, where_vals + vals
+        return statement, vals
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
