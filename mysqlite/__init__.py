@@ -109,10 +109,10 @@ class DB:
                 conn = self._create_conn()
                 if self.provider == 'mysql':
                     with conn.cursor() as cursor:
-                        cursor.execute(query)
+                        cursor.execute(query, params)
                 elif self.provider == 'sqlite3':
                     cursor = conn.cursor()
-                    cursor.execute(query)
+                    cursor.execute(query, params)
                 if push_type == 'commit':
                     conn.commit()
                     result = True
@@ -157,7 +157,7 @@ class DB:
                 vals.append(str(value))
         statement = statement.format(
             keys=', '.join(dic.keys()),
-            values=', '.join(vals),
+            values=', '.join(['?']*len(vals)),
             table=table)
         return statement, vals
 
