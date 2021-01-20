@@ -161,7 +161,7 @@ class DB:
             values=', '.join((['%s'] if self.provider == 'mysql' else ['?']) *
                              len(vals)),
             table=table)
-        return statement, vals
+        return statement, tuple(vals)
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
@@ -218,7 +218,7 @@ class DB:
                 table=table)
             where_vals = tuple(
                 where.values()) if type(where) is dict else tuple()
-            return statement, where_vals + vals
+            return statement, where_vals + tuple(vals)
 
     @push('commit')
     def delete(self, table: str, where: Union[str, dict]=None):
