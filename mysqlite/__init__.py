@@ -211,8 +211,9 @@ class DB:
                 if value is None:
                     keys.append(f'{key} = NULL')
                 else:
-                    keys.append(f'{key} = %s')
-                vals.append(str(value))
+                    keys.append(f'{key} = %s' if self.provider == 'mysql' else
+                        f'{key} = ?')
+                vals.append(value)
             statement = statement.format(
                 pairs=', '.join(keys),
                 table=table)
