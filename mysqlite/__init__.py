@@ -264,7 +264,7 @@ class ResponseRow:
     def __call__(self, **kwargs):
         self._db.update(self.table,
                         {name: value for name, value in kwargs.items()},
-                        where=parse_where(self._vals))
+                        where=parse_where(self._vals, self.db.provider))
         self.__setattr__(name, value)
 
     def __str__(self):
