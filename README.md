@@ -42,7 +42,7 @@ for pet in result:
 ## Docs
 
 #### `class mysqlite.DB(db_name=None, user=None, passwd=None, filename=None, table=None)`
-Main class to interact with DBs. Only `db_name` + `passwd` + `user` (`user` is optional) for connecting to MySQL DB **or** `filename` for connectiong to SQLite3 DB must be provided. You can specify a `table` if you want not to specify it in every request.  
+Main class to interact with DBs. Only `db_name` + `passwd` + `user` (`user` is optional) for connecting to MySQL DB **or** `filename` for connecting to SQLite3 DB must be provided. You can specify a `table` if you want not to specify it in every request.  
 If you need to initialize several `mysqlite.DB` objects that would work with same DB you can set `mysqlite.DB_NAME`, `mysqlite.USER`, `mysqlite.PASSWD` and `mysqlite.FILENAME` values to needed. `mysqlite.USER` defaults to `'root'`, other values are empty.  
 Example
 ```python3

@@ -53,14 +53,14 @@ def parse_order(order: Union[str, list]) -> str:
 class DB:
 
     def __init__(
-                self, db_name: str=None, user: str=None, passwd: str=None,
+                self, db_name: str=DB_NAME, user: str=USER, passwd: str=PASSWD,
                 filename: str=None, table: str=None):
             # Only db_name + user (optional, default 'root') + passwd OR filename must be provided
             if db_name and passwd:
                 self.provider = 'mysql'
-                self.db_name = db_name or DB_NAME
-                self.user = user or USER
-                self.passwd = passwd or PASSWD
+                self.db_name = db_name
+                self.user = user
+                self.passwd = passwd
                 self.charset = 'utf8mb4'
                 self.host = 'localhost'
             elif filename or FILENAME:
@@ -152,10 +152,7 @@ class DB:
         dic = dic or kwargs
         vals = []
         for value in dic.values():
-            if value is None:
-                vals.append('NULL')
-            else:
-                vals.append(value)
+            vals.append(value)
         statement = statement.format(
             keys=', '.join(dic.keys()),
             values=', '.join((['%s'] if self.provider == 'mysql' else ['?']) *
@@ -208,11 +205,8 @@ class DB:
             keys = []
             vals = []
             for key, value in dic.items():
-                if value is None:
-                    keys.append(f'{key} = NULL')
-                else:
-                    keys.append(f'{key} = %s' if self.provider == 'mysql' else
-                        f'{key} = ?')
+                keys.append(f'{key} = %s' if self.provider == 'mysql' else
+                            f'{key} = ?')
                 vals.append(value)
             statement = statement.format(
                 pairs=', '.join(keys),
@@ -267,8 +261,9 @@ class ResponseRow:
     def values(self):
         return self._vals.values()
 
-    def __call__(self, name, value):
-        self._db.update(self.table, {name: value},
+    def __call__(self, **kwargs):
+        self._db.update(self.table,
+                        {name: value for name, value in kwargs.items()},
                         where=parse_where(self._vals))
         self.__setattr__(name, value)
 
@@ -326,8 +321,11 @@ class Response:
             return [getattr(i, key) for i in self.rows]
 
     def __bool__(self):
-        return bool(len(self.rows))
+        return bool(len(self))
+
+    def __len__(self):
+        return len(self.rows)
 
 __all__ = ['ALL', 'ASC', 'DESC', 'parse_where', 'parse_order', 'DB']
 
-__version__ = '0.0.3'
+__version__ = '0.0.4'
