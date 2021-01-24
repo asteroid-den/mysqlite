@@ -265,7 +265,7 @@ class ResponseRow:
         self._db.update(self.table,
                         {name: value for name, value in kwargs.items()},
                         where=self._vals)
-        for name, value in kwargs:
+        for name, value in kwargs.items():
             self.__setattr__(name, value)
 
     def __str__(self):
