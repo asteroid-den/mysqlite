@@ -162,17 +162,17 @@ class DB:
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
-               where: Union[str, dict]=None, order_by: Union[list, str]=None,
-               group_by: str=None, limit: int=None):
+               where: Union[str, dict]=None,
+               group_by: str=None, order_by: Union[list, str]=None, limit: int=None):
 
             statement = 'SELECT {values} FROM {table}'
             table = table or self.table
             if where:
                 statement += f' WHERE {parse_where(where, self.provider)}'
-            if order_by:
-                statement += f' ORDER BY {parse_order(order_by)}'
             if group_by:
                 statement += f' GROUP BY {group_by}'
+            if order_by:
+                statement += f' ORDER BY {parse_order(order_by)}'
             if limit:
                 statement += f' LIMIT {limit}'
             statement += ';'
