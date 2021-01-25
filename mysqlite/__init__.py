@@ -162,8 +162,8 @@ class DB:
 
     @push('fetch')
     def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
-               where: Union[str, dict]=None,
-               group_by: str=None, order_by: Union[list, str]=None, limit: int=None):
+               where: Union[str, dict]=None, group_by: str=None,
+               order_by: Union[list, str]=None, limit: int=None):
 
             statement = 'SELECT {values} FROM {table}'
             table = table or self.table
