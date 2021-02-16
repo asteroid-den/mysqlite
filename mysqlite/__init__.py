@@ -6,7 +6,7 @@ import re
 import json
 import sqlite3
 import itertools
-from os import listdir
+from os import listdir, path
 
 ALL = '*'
 ASC = 'ASC'
@@ -15,6 +15,7 @@ DESC = 'DESC'
 DB_NAME = ''
 USER = 'root'
 PASSWD = ''
+HOST = ''
 FILENAME = ''
 
 GET_TABLES_SQLITE = 'SELECT name FROM sqlite_master WHERE type = "table";'
@@ -32,8 +33,7 @@ def parse_where(where: Union[str, dict], provider: str) -> str:
     elif type(where) is dict:
         clauses = []
         for key in where.keys():
-            clauses.append(f'{key} = %s' if provider == 'mysql' else
-                           f'{key} = ?')
+            clauses.append(f'{key} = %s' if provider == 'mysql' else f'{key} = ?')
         return ' AND '.join(clauses)
 
 
@@ -51,27 +51,28 @@ def parse_order(order: Union[str, list]) -> str:
 
 
 class DB:
+    def __init__(self, db_name: str = None, user: str = None, passwd: str = None,
+                 host: str = None, filename: str = None, table: str = None):
 
-    def __init__(
-                self, db_name: str=DB_NAME, user: str=USER, passwd: str=PASSWD,
-                filename: str=None, table: str=None):
             # Only db_name + user (optional, default 'root') + passwd OR filename must be provided
+            db_name = db_name or DB_NAME
+            user = user or USER or 'root'
+            passwd = passwd or PASSWD
+            filename = filename or FILENAME
+            host = host or HOST or 'localhost'
+
             if db_name and passwd:
                 self.provider = 'mysql'
                 self.db_name = db_name
                 self.user = user
                 self.passwd = passwd
                 self.charset = 'utf8mb4'
-                self.host = 'localhost'
-            elif filename or FILENAME:
-                if re.match(r'^[\w,\s-]+\.db$', filename):
-                    self.provider = 'sqlite3'
-                    self.filename = filename
-                elif re.match(r'^[\w,\s-]+\.db$', FILENAME):
-                    self.provider = 'sqlite3'
-                    self.filename = FILENAME
-                else:
-                    raise ValueError('Invalid filename provided')
+                self.host = host
+
+            elif filename:
+                self.provider = 'sqlite3'
+                self.filename = filename
+
             else:
                 raise ValueError('Neither data for MySQL nor for SQLite provided')
 
@@ -87,14 +88,17 @@ class DB:
                 charset=self.charset,
                 cursorclass=DictCursor
             )
+
         elif self.provider == 'sqlite3':
             conn = sqlite3.connect(self.filename)
+
         return conn
 
     @property
     def exists(self):
         if self.provider == 'sqlite3':
-            return self.filename in listdir()
+            return path.exists(self.filename)
+
         elif self.provider == 'mysql':
             try:
                 conn = self._create_conn()
@@ -108,27 +112,31 @@ class DB:
             def args_wrapper(self, *args, **kwargs):
                 query, params = func(self, *args, **kwargs)
                 conn = self._create_conn()
+
                 if self.provider == 'mysql':
                     with conn.cursor() as cursor:
                         cursor.execute(query, params)
+
                 elif self.provider == 'sqlite3':
                     cursor = conn.cursor()
                     cursor.execute(query, params)
+
                 if push_type == 'commit':
                     conn.commit()
                     result = True
+
                 elif push_type == 'fetch':
                     result = cursor.fetchall()
                     try:
-                        table = re.search(r'FROM (?P<table>\w+)',
-                                          query).group('table')
+                        table = re.search(r'FROM (?P<table>\w+)', query).group('table')
                     except AttributeError:
                         table = None
+
                     if self.provider == 'sqlite3':
                         if kwargs.get('tup_res', False):
                             return result
-                        a_l = kwargs.get('args_list') or (
-                            args[1] if len(args) >= 2 else None) or ALL
+                        a_l = kwargs.get('args') or (args[1] if len(args) >= 2 else None) or ALL
+
                         if a_l == ALL:
                             cols = tuple(el[0] for el in self.raw_select(
                                 GET_COLUMNS_SQLITE % table, tup_res=True))
@@ -136,6 +144,7 @@ class DB:
                             cols = [a_l] if type(a_l) is str else (
                                 a_l if type(a_l) is list else
                                 list(a_l.values()))
+
                         result = list(dict(zip(cols, row)) for row in result)
                     result = Response(self, table, result)
                 else:
@@ -146,36 +155,44 @@ class DB:
         return wrapper
 
     @push('commit')
-    def insert(self, table: str=None, dic: dict=None, **kwargs):
+    def insert(self, table: str = None, dic: dict = None, **kwargs):
         statement = 'INSERT INTO {table} ({keys}) VALUES ({values});'
         table = table or self.table
         dic = dic or kwargs
         vals = []
+
         for value in dic.values():
             vals.append(value)
+
         statement = statement.format(
             keys=', '.join(dic.keys()),
-            values=', '.join((['%s'] if self.provider == 'mysql' else ['?']) *
-                             len(vals)),
+            values=', '.join((['%s'] if self.provider == 'mysql' else ['?']) * len(vals)),
             table=table)
+
         return statement, tuple(vals)
 
     @push('fetch')
-    def select(self, table: str=None, args_list: Union[list, str, dict]=ALL,
-               where: Union[str, dict]=None, group_by: str=None,
-               order_by: Union[list, str]=None, limit: int=None):
+    def select(self, table: str = None, args: Union[list, str, dict] = ALL,
+               where: Union[str, dict] = None, group_by: str = None,
+               order_by: Union[list, str] = None, limit: int = None):
 
             statement = 'SELECT {values} FROM {table}'
             table = table or self.table
+
             if where:
                 statement += f' WHERE {parse_where(where, self.provider)}'
+
             if group_by:
                 statement += f' GROUP BY {group_by}'
+
             if order_by:
                 statement += f' ORDER BY {parse_order(order_by)}'
+
             if limit:
                 statement += f' LIMIT {limit}'
+
             statement += ';'
+
             if type(args_list) is dict:
                 statement = statement.format(
                     values=', '.join([f'{column} AS {column_key}'
@@ -188,69 +205,77 @@ class DB:
                 statement = statement.format(
                     values=', '.join(args_list),
                     table=table)
+
             where_vals = tuple(
                 where.values()) if type(where) is dict else tuple()
             return statement, where_vals
 
     @push('commit')
-    def update(self, table: str=None, dic: dict=None,
-               where: Union[str, dict]=None, **kwargs):
-
+    def update(self, table: str = None, dic: dict = None, where: Union[str, dict] = None, **kwargs):
             statement = 'UPDATE {table} SET {pairs}'
             table = table or self.table
             dic = dic or kwargs
+
             if where:
                 statement += f' WHERE {parse_where(where, self.provider)}'
             statement += ';'
-            keys = []
-            vals = []
+            keys, vals = [], []
+
             for key, value in dic.items():
-                keys.append(f'{key} = %s' if self.provider == 'mysql' else
-                            f'{key} = ?')
+                keys.append(f'{key} = %s' if self.provider == 'mysql' else f'{key} = ?')
                 vals.append(value)
-            statement = statement.format(
-                pairs=', '.join(keys),
-                table=table)
-            where_vals = tuple(
-                where.values()) if type(where) is dict else tuple()
+
+            statement = statement.format(pairs=', '.join(keys), table=table)
+            where_vals = tuple(where.values()) if type(where) is dict else tuple()
             return statement, tuple(vals) + where_vals
 
     @push('commit')
-    def delete(self, table: str, where: Union[str, dict]=None):
+    def delete(self, table: str, where: Union[str, dict] = None):
         table = table or self.table
         statement = f'DELETE FROM {table}'
+
         if where:
             statement += f' WHERE {parse_where(where, self.provider)}'
+
         statement += ';'
         where_vals = tuple(where.values()) if type(where) is dict else tuple()
         return statement, where_vals
 
     @push('commit')
     def create_table(self, name: str, fields: Union[Dict[str, str], str]):
+
         if type(fields) is dict:
             t_fields = '(' + ', '.join(
                 [f'{key} {value}' for key, value in fields.items()]) + ')'
+
         elif type(fields) is str:
-            t_fields = f'({fields})'
+            borders = fields[0], fields[-1]
+
+            if ''.join(borders) != '()':
+                t_fields = f'({fields})'
+
         return f'CREATE TABLE {name} {t_fields};', tuple()
 
     @push('fetch')
-    def raw_select(self, query: str, tup_res: bool=False, params: tuple=()):
+    def raw_select(self, query: str, params: tuple = (), tup_res: bool = False):
         return query, params
 
     @push('commit')
-    def raw_commit(self, query: str, params: tuple=()):
+    def raw_commit(self, query: str, params: tuple = ()):
         return query, params
 
 
 class ResponseRow:
+
     def __init__(self, db: DB, table: str, values: dict):
         self._db = db
         self._vals = values
         self.table = table
+
         for key, value in values.items():
             if type(value) is str and value.startswith('!JSON'):
                 value = json.loads(value.lstrip('!JSON'))
+
             setattr(self, key, value)
 
     @property
@@ -262,39 +287,44 @@ class ResponseRow:
         return self._vals.values()
 
     def __call__(self, **kwargs):
-        self._db.update(self.table,
-                        {name: value for name, value in kwargs.items()},
-                        where=self._vals)
+        self._db.update(self.table, kwargs, where=self._vals)
         for name, value in kwargs.items():
             self.__setattr__(name, value)
 
     def __str__(self):
-        return json.dumps(self._vals, indent=4, ensure_ascii=False)
+        return repr(self)
 
     def __repr__(self):
-        return str(self)
+        return json.dumps(self._vals, indent=4, ensure_ascii=False)
 
 
 class Response:
-    def __init__(self, db: DB, table: Optional[str],
-                 rows: Optional[List[dict]] = []):
+
+    def __init__(self, db: DB, table: Optional[str] = None, rows: List[dict]):
         self.rows = []
-        self.type = table
+        self.type = table or db.table
+
         if len(rows) == 1:
             for key, value in rows[0].items():
                 if type(value) is str and value.startswith('!JSON'):
                     value = json.loads(value.lstrip('!JSON'))
                 setattr(self, key, value)
+
         elif len(rows) == 0:
             if db.provider == 'mysql':
                 get_columns = GET_COLUMNS_MYSQL % (db.db_name, table)
+
             elif db.provider == 'sqlite3':
                 get_columns = GET_COLUMNS_SQLITE % table
+
             for row in db.raw_select(get_columns):
+
                 if db.provider == 'mysql':
                     setattr(self, row.COLUMN_NAME, None)
+
                 elif db.provider == 'sqlite3':
                     setattr(self, row.cid, None)
+
         for row in rows:
             self.rows.append(ResponseRow(db, table, row))
 
@@ -308,6 +338,7 @@ class Response:
     def __str__(self):
         table = prettytable.PrettyTable()
         table.hrules = prettytable.ALL
+
         if self.rows:
             table.field_names = self.rows[0].cols
             for record in self.rows:
