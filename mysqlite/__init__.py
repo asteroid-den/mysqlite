@@ -300,7 +300,7 @@ class ResponseRow:
 
 class Response:
 
-    def __init__(self, db: DB, table: Optional[str] = None, rows: List[dict]):
+    def __init__(self, db: DB, table: Optional[str] = None, rows: List[dict] = []):
         self.rows = []
         self.type = table or db.table
 
