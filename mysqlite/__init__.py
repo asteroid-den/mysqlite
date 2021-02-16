@@ -193,17 +193,16 @@ class DB:
 
             statement += ';'
 
-            if type(args_list) is dict:
+            if type(args) is dict:
                 statement = statement.format(
                     values=', '.join([f'{column} AS {column_key}'
                                      for column, column_key in
-                                     args_list.items()]),
+                                     args.items()]),
                     table=table)
             else:
-                args_list = args_list if type(
-                    args_list) is list else [args_list]
+                args = args if type(args) is list else [args]
                 statement = statement.format(
-                    values=', '.join(args_list),
+                    values=', '.join(args),
                     table=table)
 
             where_vals = tuple(
