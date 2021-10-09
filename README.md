@@ -2,6 +2,8 @@
 
 Minimalistic MySQL and SQLite 3 wrapper
 
+**⚠️ UNDER HEAVY MAINTENANCE ⚠️**
+
 _I'll be glad to see you in our_ [Telegram chat](https://t.me/MySQLite) ^_^
 
 ## Quickstart
